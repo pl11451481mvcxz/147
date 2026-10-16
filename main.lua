@@ -1,16 +1,15 @@
 -- ============================================
---  RayField 风格 UI 库 (Mobile) - 修复版
+--  RayField 风格 UI 库 (Mobile 小尺寸版)
+--  320x480 + UIScale 可微调
 -- ============================================
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- 等待相机
 local Camera = workspace.CurrentCamera
 while not Camera do
     task.wait()
@@ -21,7 +20,6 @@ local Theme = {
     Background     = Color3.fromRGB(20, 20, 20),
     BackgroundAlt  = Color3.fromRGB(28, 28, 28),
     Element        = Color3.fromRGB(35, 35, 35),
-    ElementHover   = Color3.fromRGB(48, 48, 48),
     Text           = Color3.fromRGB(240, 240, 240),
     TextDim        = Color3.fromRGB(160, 160, 160),
     Accent         = Color3.fromRGB(255, 255, 255),
@@ -30,7 +28,9 @@ local Theme = {
     FontBold       = Enum.Font.GothamBold,
 }
 
--- 工具
+-- 全局缩放（觉得还大就改小，0.7~1.0）
+local UI_SCALE = 0.85
+
 local function Create(className, props)
     local inst = Instance.new(className)
     for k, v in pairs(props or {}) do
@@ -118,57 +118,64 @@ function UI.new(title)
     })
     self.Gui = gui
 
-    -- 主容器（全屏）
+    -- 主容器（小尺寸固定大小）
     local main = Create("Frame", {
         Name = "Main",
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(0, 320, 0, 480),
+        Position = UDim2.new(0.5, -160, 0.5, -240),
         BackgroundColor3 = Theme.Background,
         BackgroundTransparency = 0.05,
         BorderSizePixel = 0,
         Parent = gui,
     })
-    AddCorner(main, UDim.new(0, 18))
+    AddCorner(main, UDim.new(0, 14))
     AddFeatherStroke(main, 1.5, 0.15)
     self.Main = main
+
+    -- 全局缩放
+    local uiScale = Create("UIScale", {
+        Scale = UI_SCALE,
+        Parent = main,
+    })
+    self.UIScale = uiScale
 
     -- 标题栏
     local topBar = Create("Frame", {
         Name = "TopBar",
-        Size = UDim2.new(1, 0, 0, 56),
+        Size = UDim2.new(1, 0, 0, 40),
         Position = UDim2.new(0, 0, 0, 0),
         BackgroundColor3 = Theme.BackgroundAlt,
         BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
         Parent = main,
     })
-    AddCorner(topBar, UDim.new(0, 18))
+    AddCorner(topBar, UDim.new(0, 14))
     AddFeatherStroke(topBar, 1, 0.4)
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -120, 1, 0),
-        Position = UDim2.new(0, 20, 0, 0),
+        Size = UDim2.new(1, -90, 1, 0),
+        Position = UDim2.new(0, 14, 0, 0),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 20,
+        TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = topBar,
     })
 
     local closeBtn = Create("TextButton", {
-        Size = UDim2.new(0, 40, 0, 40),
-        Position = UDim2.new(1, -50, 0.5, -20),
+        Size = UDim2.new(0, 28, 0, 28),
+        Position = UDim2.new(1, -36, 0.5, -14),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
         Text = "✕",
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 18,
+        TextSize = 13,
         Parent = topBar,
     })
-    AddCorner(closeBtn, UDim.new(0, 10))
+    AddCorner(closeBtn, UDim.new(0, 8))
     closeBtn.MouseButton1Click:Connect(function()
         gui.Enabled = false
     end)
@@ -183,19 +190,20 @@ function UI.new(title)
         BorderSizePixel = 0,
         Parent = main,
     })
-    AddCorner(tabBar, UDim.new(0, 14))
+    AddCorner(tabBar, UDim.new(0, 10))
     AddFeatherStroke(tabBar, 1, 0.4)
     self.TabBar = tabBar
 
     local tabLayout = Create("UIListLayout", {
-        Padding = UDim.new(0, 8),
+        Padding = UDim.new(0, 5),
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = tabBar,
     })
     Create("UIPadding", {
-        PaddingTop = UDim.new(0, 10),
-        PaddingLeft = UDim.new(0, 8),
-        PaddingRight = UDim.new(0, 8),
+        PaddingTop = UDim.new(0, 6),
+        PaddingLeft = UDim.new(0, 6),
+        PaddingRight = UDim.new(0, 6),
+        PaddingBottom = UDim.new(0, 6),
         Parent = tabBar,
     })
 
@@ -208,7 +216,7 @@ function UI.new(title)
         ClipsDescendants = true,
         Parent = main,
     })
-    AddCorner(content, UDim.new(0, 14))
+    AddCorner(content, UDim.new(0, 10))
     AddFeatherStroke(content, 1, 0.4)
     self.Content = content
 
@@ -217,55 +225,52 @@ function UI.new(title)
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        ScrollBarThickness = 4,
+        ScrollBarThickness = 3,
         ScrollBarImageColor3 = Theme.Accent,
         CanvasSize = UDim2.new(0, 0, 0, 0),
         Parent = content,
     })
     local scrollLayout = Create("UIListLayout", {
-        Padding = UDim.new(0, 10),
+        Padding = UDim.new(0, 7),
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = scroll,
     })
     Create("UIPadding", {
-        PaddingTop = UDim.new(0, 12),
-        PaddingBottom = UDim.new(0, 12),
-        PaddingLeft = UDim.new(0, 12),
-        PaddingRight = UDim.new(0, 12),
+        PaddingTop = UDim.new(0, 8),
+        PaddingBottom = UDim.new(0, 8),
+        PaddingLeft = UDim.new(0, 8),
+        PaddingRight = UDim.new(0, 8),
         Parent = scroll,
     })
     scrollLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        scroll.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y + 24)
+        scroll.CanvasSize = UDim2.new(0, 0, 0, scrollLayout.AbsoluteContentSize.Y + 16)
     end)
     self.Scroll = scroll
 
     -- 响应式布局
     local function ApplyResponsive()
-        local cam = workspace.CurrentCamera
-        if not cam then return end
-        local vp = cam.ViewportSize
+        local vp = Camera.ViewportSize
         if vp.X < 700 then
-            tabBar.Size = UDim2.new(1, -20, 0, 50)
-            tabBar.Position = UDim2.new(0, 10, 0, 66)
+            -- 手机端：Tab 横排在顶部
+            tabBar.Size = UDim2.new(1, -16, 0, 40)
+            tabBar.Position = UDim2.new(0, 8, 0, 48)
             tabLayout.FillDirection = Enum.FillDirection.Horizontal
-            content.Size = UDim2.new(1, -20, 1, -130)
-            content.Position = UDim2.new(0, 10, 0, 124)
+            tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+            content.Size = UDim2.new(1, -16, 1, -100)
+            content.Position = UDim2.new(0, 8, 0, 94)
         else
-            tabBar.Size = UDim2.new(0, 160, 1, -72)
-            tabBar.Position = UDim2.new(0, 10, 0, 66)
+            -- 电脑端：Tab 竖排在左侧
+            tabBar.Size = UDim2.new(0, 110, 1, -56)
+            tabBar.Position = UDim2.new(0, 8, 0, 48)
             tabLayout.FillDirection = Enum.FillDirection.Vertical
-            content.Size = UDim2.new(1, -190, 1, -72)
-            content.Position = UDim2.new(0, 180, 0, 66)
+
+            content.Size = UDim2.new(1, -132, 1, -56)
+            content.Position = UDim2.new(0, 124, 0, 48)
         end
     end
     ApplyResponsive()
-
-    task.spawn(function()
-        while gui.Parent do
-            ApplyResponsive()
-            task.wait(1)
-        end
-    end)
+    Camera:GetPropertyChangedSignal("ViewportSize"):Connect(ApplyResponsive)
 
     return self
 end
@@ -273,17 +278,17 @@ end
 -- Tab
 function UI:Tab(name)
     local btn = Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 42),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundColor3 = Theme.Element,
         BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
         Text = name,
         TextColor3 = Theme.TextDim,
         Font = Theme.Font,
-        TextSize = 15,
+        TextSize = 13,
         Parent = self.TabBar,
     })
-    AddCorner(btn, UDim.new(0, 10))
+    AddCorner(btn, UDim.new(0, 8))
 
     local tabObj = { Name = name, Button = btn, Elements = {} }
 
@@ -320,16 +325,16 @@ end
 -- 按钮
 function UI:Button(tab, text, callback)
     local btn = Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 16,
+        TextSize = 14,
         AutoButtonColor = false,
     })
-    AddCorner(btn, UDim.new(0, 10))
+    AddCorner(btn, UDim.new(0, 8))
     AddFeatherStroke(btn, 1, 0.5)
 
     btn.MouseButton1Click:Connect(function()
@@ -352,38 +357,38 @@ end
 function UI:Toggle(tab, text, default, callback)
     default = default or false
     local container = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
     })
-    AddCorner(container, UDim.new(0, 10))
+    AddCorner(container, UDim.new(0, 8))
     AddFeatherStroke(container, 1, 0.5)
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -70, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
+        Size = UDim2.new(1, -60, 1, 0),
+        Position = UDim2.new(0, 12, 0, 0),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 16,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = container,
     })
 
     local switchBg = Create("Frame", {
-        Size = UDim2.new(0, 50, 0, 26),
-        Position = UDim2.new(1, -66, 0.5, -13),
+        Size = UDim2.new(0, 40, 0, 20),
+        Position = UDim2.new(1, -50, 0.5, -10),
         BackgroundColor3 = default and Theme.Accent or Color3.fromRGB(60, 60, 60),
         BorderSizePixel = 0,
         Parent = container,
     })
-    AddCorner(switchBg, UDim.new(0, 13))
+    AddCorner(switchBg, UDim.new(0, 10))
     AddFeatherStroke(switchBg, 1, 0.4)
 
     local knob = Create("Frame", {
-        Size = UDim2.new(0, 20, 0, 20),
-        Position = default and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10),
+        Size = UDim2.new(0, 16, 0, 16),
+        Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
         BackgroundColor3 = default and Theme.Background or Color3.fromRGB(200, 200, 200),
         BorderSizePixel = 0,
         Parent = switchBg,
@@ -404,7 +409,7 @@ function UI:Toggle(tab, text, default, callback)
             BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(60, 60, 60)
         }):Play()
         TweenService:Create(knob, info, {
-            Position = state and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10),
+            Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
             BackgroundColor3 = state and Theme.Background or Color3.fromRGB(200, 200, 200)
         }):Play()
     end
@@ -427,40 +432,40 @@ function UI:Slider(tab, text, min, max, default, callback)
     default = default or min
 
     local container = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 64),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
     })
-    AddCorner(container, UDim.new(0, 10))
+    AddCorner(container, UDim.new(0, 8))
     AddFeatherStroke(container, 1, 0.5)
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -100, 0, 22),
-        Position = UDim2.new(0, 16, 0, 6),
+        Size = UDim2.new(1, -80, 0, 18),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 15,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = container,
     })
 
     local valueLabel = Create("TextLabel", {
-        Size = UDim2.new(0, 80, 0, 22),
-        Position = UDim2.new(1, -96, 0, 6),
+        Size = UDim2.new(0, 64, 0, 18),
+        Position = UDim2.new(1, -76, 0, 4),
         BackgroundTransparency = 1,
         Text = tostring(default),
         TextColor3 = Theme.Accent,
         Font = Theme.FontBold,
-        TextSize = 15,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = container,
     })
 
     local track = Create("Frame", {
-        Size = UDim2.new(1, -32, 0, 6),
-        Position = UDim2.new(0, 16, 0, 40),
+        Size = UDim2.new(1, -24, 0, 5),
+        Position = UDim2.new(0, 12, 0, 32),
         BackgroundColor3 = Color3.fromRGB(60, 60, 60),
         BorderSizePixel = 0,
         Parent = container,
@@ -476,8 +481,8 @@ function UI:Slider(tab, text, min, max, default, callback)
     AddCorner(fill, UDim.new(1, 0))
 
     local dot = Create("Frame", {
-        Size = UDim2.new(0, 18, 0, 18),
-        Position = UDim2.new(0, -9, 0.5, -9),
+        Size = UDim2.new(0, 14, 0, 14),
+        Position = UDim2.new(0, -7, 0.5, -7),
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BorderSizePixel = 0,
         ZIndex = 2,
@@ -491,7 +496,7 @@ function UI:Slider(tab, text, min, max, default, callback)
     local function updateVisual()
         local alpha = (value - min) / (max - min)
         fill.Size = UDim2.new(alpha, 0, 1, 0)
-        dot.Position = UDim2.new(alpha, -9, 0.5, -9)
+        dot.Position = UDim2.new(alpha, -7, 0.5, -7)
         valueLabel.Text = tostring(math.floor(value * 100) / 100)
     end
     updateVisual()
@@ -535,28 +540,28 @@ end
 -- 文本框
 function UI:Textbox(tab, text, placeholder, callback)
     local container = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 64),
+        Size = UDim2.new(1, 0, 0, 52),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
     })
-    AddCorner(container, UDim.new(0, 10))
+    AddCorner(container, UDim.new(0, 8))
     AddFeatherStroke(container, 1, 0.5)
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -32, 0, 20),
-        Position = UDim2.new(0, 16, 0, 6),
+        Size = UDim2.new(1, -24, 0, 16),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 14,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = container,
     })
 
     local box = Create("TextBox", {
-        Size = UDim2.new(1, -32, 0, 32),
-        Position = UDim2.new(0, 16, 0, 28),
+        Size = UDim2.new(1, -24, 0, 24),
+        Position = UDim2.new(0, 12, 0, 22),
         BackgroundColor3 = Theme.BackgroundAlt,
         BorderSizePixel = 0,
         Text = "",
@@ -564,15 +569,15 @@ function UI:Textbox(tab, text, placeholder, callback)
         PlaceholderColor3 = Theme.TextDim,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 14,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         ClearTextOnFocus = false,
         Parent = container,
     })
-    AddCorner(box, UDim.new(0, 8))
+    AddCorner(box, UDim.new(0, 6))
     Create("UIPadding", {
-        PaddingLeft = UDim.new(0, 10),
-        PaddingRight = UDim.new(0, 10),
+        PaddingLeft = UDim.new(0, 8),
+        PaddingRight = UDim.new(0, 8),
         Parent = box,
     })
 
@@ -589,64 +594,64 @@ end
 function UI:Dropdown(tab, text, options, callback)
     options = options or {}
     local container = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
         ClipsDescendants = true,
     })
-    AddCorner(container, UDim.new(0, 10))
+    AddCorner(container, UDim.new(0, 8))
     AddFeatherStroke(container, 1, 0.5)
 
     local header = Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundTransparency = 1,
         Text = "",
         Parent = container,
     })
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -110, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
+        Size = UDim2.new(1, -90, 1, 0),
+        Position = UDim2.new(0, 12, 0, 0),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.Font,
-        TextSize = 16,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = header,
     })
 
     local selectedLabel = Create("TextLabel", {
-        Size = UDim2.new(0, 80, 1, 0),
-        Position = UDim2.new(1, -100, 0, 0),
+        Size = UDim2.new(0, 60, 1, 0),
+        Position = UDim2.new(1, -80, 0, 0),
         BackgroundTransparency = 1,
         Text = "选择...",
         TextColor3 = Theme.TextDim,
         Font = Theme.Font,
-        TextSize = 14,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = header,
     })
 
     local arrow = Create("TextLabel", {
-        Size = UDim2.new(0, 20, 1, 0),
-        Position = UDim2.new(1, -26, 0, 0),
+        Size = UDim2.new(0, 16, 1, 0),
+        Position = UDim2.new(1, -20, 0, 0),
         BackgroundTransparency = 1,
         Text = "▼",
         TextColor3 = Theme.TextDim,
         Font = Theme.Font,
-        TextSize = 12,
+        TextSize = 10,
         Parent = header,
     })
 
     local optionHolder = Create("Frame", {
-        Size = UDim2.new(1, -20, 0, 0),
-        Position = UDim2.new(0, 10, 0, 48),
+        Size = UDim2.new(1, -16, 0, 0),
+        Position = UDim2.new(0, 8, 0, 38),
         BackgroundTransparency = 1,
         Parent = container,
     })
     Create("UIListLayout", {
-        Padding = UDim.new(0, 4),
+        Padding = UDim.new(0, 3),
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = optionHolder,
     })
@@ -655,22 +660,22 @@ function UI:Dropdown(tab, text, options, callback)
 
     for _, opt in ipairs(options) do
         local ob = Create("TextButton", {
-            Size = UDim2.new(1, 0, 0, 32),
+            Size = UDim2.new(1, 0, 0, 26),
             BackgroundColor3 = Theme.BackgroundAlt,
             BorderSizePixel = 0,
             Text = tostring(opt),
             TextColor3 = Theme.Text,
             Font = Theme.Font,
-            TextSize = 14,
+            TextSize = 12,
             Parent = optionHolder,
         })
-        AddCorner(ob, UDim.new(0, 8))
+        AddCorner(ob, UDim.new(0, 6))
         ob.MouseButton1Click:Connect(function()
             selectedLabel.Text = tostring(opt)
             selectedLabel.TextColor3 = Theme.Text
             expanded = false
             TweenService:Create(container, TweenInfo.new(0.2), {
-                Size = UDim2.new(1, 0, 0, 44)
+                Size = UDim2.new(1, 0, 0, 34)
             }):Play()
             arrow.Text = "▼"
             if callback then pcall(callback, opt) end
@@ -680,14 +685,14 @@ function UI:Dropdown(tab, text, options, callback)
     header.MouseButton1Click:Connect(function()
         expanded = not expanded
         if expanded then
-            local h = 48 + #options * 36 + 8
+            local h = 38 + #options * 29 + 6
             TweenService:Create(container, TweenInfo.new(0.2), {
                 Size = UDim2.new(1, 0, 0, h)
             }):Play()
             arrow.Text = "▲"
         else
             TweenService:Create(container, TweenInfo.new(0.2), {
-                Size = UDim2.new(1, 0, 0, 44)
+                Size = UDim2.new(1, 0, 0, 34)
             }):Play()
             arrow.Text = "▼"
         end
@@ -701,12 +706,12 @@ end
 -- 标签
 function UI:Label(tab, text)
     local label = Create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 28),
+        Size = UDim2.new(1, 0, 0, 22),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.TextDim,
         Font = Theme.Font,
-        TextSize = 15,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.Scroll,
     })
@@ -718,24 +723,24 @@ end
 -- 分割线
 function UI:Section(tab, text)
     local container = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 30),
+        Size = UDim2.new(1, 0, 0, 24),
         BackgroundTransparency = 1,
     })
     Create("TextLabel", {
-        Size = UDim2.new(0, 0, 0, 18),
-        Position = UDim2.new(0, 0, 0, 6),
+        Size = UDim2.new(0, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 4),
         AutomaticSize = Enum.AutomaticSize.X,
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 16,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = container,
     })
     Create("Frame", {
         Size = UDim2.new(1, 0, 0, 1),
-        Position = UDim2.new(0, 0, 0, 26),
+        Position = UDim2.new(0, 0, 0, 22),
         BackgroundColor3 = Theme.Stroke,
         BackgroundTransparency = 0.7,
         BorderSizePixel = 0,
@@ -750,46 +755,46 @@ end
 function UI:Notify(title, text, duration)
     duration = duration or 3
     local note = Create("Frame", {
-        Size = UDim2.new(0, 280, 0, 70),
-        Position = UDim2.new(1, 300, 0, 20),
+        Size = UDim2.new(0, 220, 0, 56),
+        Position = UDim2.new(1, 240, 0, 16),
         BackgroundColor3 = Theme.BackgroundAlt,
         BorderSizePixel = 0,
         Parent = self.Gui,
     })
-    AddCorner(note, UDim.new(0, 12))
+    AddCorner(note, UDim.new(0, 10))
     AddFeatherStroke(note, 1.5, 0.15)
 
     Create("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 24),
-        Position = UDim2.new(0, 14, 0, 8),
+        Size = UDim2.new(1, -16, 0, 20),
+        Position = UDim2.new(0, 10, 0, 6),
         BackgroundTransparency = 1,
         Text = title,
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 16,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = note,
     })
     Create("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 30),
-        Position = UDim2.new(0, 14, 0, 32),
+        Size = UDim2.new(1, -16, 0, 24),
+        Position = UDim2.new(0, 10, 0, 26),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Theme.TextDim,
         Font = Theme.Font,
-        TextSize = 14,
+        TextSize = 12,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = note,
     })
 
     TweenService:Create(note, TweenInfo.new(0.3), {
-        Position = UDim2.new(1, -300, 0, 20)
+        Position = UDim2.new(1, -236, 0, 16)
     }):Play()
 
     task.delay(duration, function()
         local t = TweenService:Create(note, TweenInfo.new(0.3), {
-            Position = UDim2.new(1, 300, 0, 20)
+            Position = UDim2.new(1, 240, 0, 16)
         })
         t:Play()
         t.Completed:Connect(function() note:Destroy() end)
