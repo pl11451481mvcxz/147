@@ -64,14 +64,40 @@ local function AddFeatherStroke(parent, thickness, transparency)
         Parent = parent,
     })
 end
-
 local function MakeDraggable(frame, dragArea)
     dragArea = dragArea or frame
     local dragging, dragStart, startPos
+    local DRAG_THRESHOLD = 6  -- 移动超过 6 像素才算拖动，避免误触
+
+    local function isInteractive(gui)
+        -- 判断触摸点是否落在按钮/输入框/滑块等交互元素上
+        local interactiveTypes = {
+            TextButton = true,
+            ImageButton = true,
+            TextBox = true,
+            ScrollingFrame = true,
+        }
+        local current = gui
+        while current and current ~= frame do
+            if interactiveTypes[current.ClassName] then
+                return true
+            end
+            current = current.Parent
+        end
+        return false
+    end
 
     dragArea.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
+            -- 如果点在交互元素上，不拖动
+            local target = PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+            for _, obj in ipairs(target) do
+                if isInteractive(obj) then
+                    return
+                end
+            end
+
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
@@ -82,10 +108,12 @@ local function MakeDraggable(frame, dragArea)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
-            frame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
+            if math.abs(delta.X) > DRAG_THRESHOLD or math.abs(delta.Y) > DRAG_THRESHOLD then
+                frame.Position = UDim2.new(
+                    startPos.X.Scale, startPos.X.Offset + delta.X,
+                    startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                )
+            end
         end
     end)
 
@@ -96,7 +124,6 @@ local function MakeDraggable(frame, dragArea)
         end
     end)
 end
-
 -- ============================================
 --  UI 类
 -- ============================================
@@ -121,7 +148,7 @@ function UI.new(title)
     -- 主容器（小尺寸）
     local main = Create("Frame", {
         Name = "Main",
-        Size = UDim2.new(0, 320, 0, 460),
+        Size = UDim2.new(0, 360, 0, 460),
         Position = UDim2.new(0.5, -160, 0.5, -230),
         BackgroundColor3 = Theme.Background,
         BackgroundTransparency = 0.05,
@@ -159,7 +186,7 @@ function UI.new(title)
         Text = title,
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 14,
+        TextSize = 18,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = topBar,
     })
@@ -169,10 +196,10 @@ function UI.new(title)
         Position = UDim2.new(1, -34, 0.5, -13),
         BackgroundColor3 = Theme.Element,
         BorderSizePixel = 0,
-        Text = "✕",
+        Text = "X",
         TextColor3 = Theme.Text,
         Font = Theme.FontBold,
-        TextSize = 12,
+        TextSize = 13,
         Parent = topBar,
     })
     AddCorner(closeBtn, UDim.new(0, 8))
