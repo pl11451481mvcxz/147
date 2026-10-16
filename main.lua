@@ -147,24 +147,15 @@ function UI.new(title)
 
     -- 主容器
     local main = Create("Frame", {
-        Name = "Main",
-        Size = UDim2.new(0, 380, 0, 540),
-        Position = UDim2.new(0.5, -190, 0.5, -270),
-        BackgroundColor3 = Theme.Background,
-        BackgroundTransparency = 0.05,
-        BorderSizePixel = 0,
-        Parent = gui,
-    })
-    AddCorner(main, UDim.new(0, 14))
-    AddFeatherStroke(main, 1.5, 0.15)
-    self.Main = main
-
-    local uiScale = Create("UIScale", {
-        Scale = UI_SCALE,
-        Parent = main,
-    })
-    self.UIScale = uiScale
-
+    Name = "Main",
+    Size = UDim2.new(0, 380, 0, 540),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundColor3 = Theme.Background,
+    BackgroundTransparency = 0.05,
+    BorderSizePixel = 0,
+    Parent = gui,
+})
     -- 标题栏
     local topBar = Create("Frame", {
         Name = "TopBar",
