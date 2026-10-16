@@ -29,7 +29,7 @@ local Theme = {
 }
 
 -- 全局缩放（觉得还大就改小，0.7~1.0）
-local UI_SCALE = 0.85
+local UI_SCALE = 0.65
 
 local function Create(className, props)
     local inst = Instance.new(className)
