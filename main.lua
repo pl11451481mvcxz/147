@@ -1,3 +1,10 @@
+--[[
+    FrostUI - 仿 Rayfield 风格...
+    用法：
+        local FrostUI = require(game.ReplicatedStorage.FrostUI)
+        local Window = FrostUI:CreateWindow({...})
+        ...
+        Group:Button("分组按钮", function() end, "Star")
 local FrostUI = require(game.ReplicatedStorage.FrostUI)
         local Window = FrostUI:CreateWindow({ Title = "我的脚本", Icon = FrostUI.Icons.Home })
         local Tab = Window:Tab("主页")
